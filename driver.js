@@ -1,36 +1,30 @@
-function Driver(nightmare) {
+function Driver(reqId, n) {
 
-  var _ = this,
-      n = nightmare;
+  var _ = this;
 
 
   // For server
   _.reset = reset;
-  _.runScript = runScript;
+  _.runDriverScript = runDriverScript;
   _.finish = finish;
 
   function reset() {
-    console.log('reset');
+    console.log(reqId, 'server.reset');
     return _;
   }
 
-  function runScript(fn) {
-    console.log('runScript');
-    fn(_);
+  function runDriverScript(driverScript) {
+    console.log(reqId, 'server.runDriverScript');
+    driverScript(_);
     return _;
   }
 
-  function finish(res, serverFn) {
-    console.log('finish');
+  function finish(serverFn) {
+    console.log(reqId, 'server.finish');
     n.then(function (result) {
-      serverFn();
-      res.send(result);
-      res.end();
+      serverFn(200, result);
     }).catch(function (error) {
-      serverFn();
-      console.error(error);
-      res.sendStatus(500);
-      res.end();
+      serverFn(500, error);
     });
     return _;
   }
@@ -41,7 +35,7 @@ function Driver(nightmare) {
   _.extract = extract;
 
   function goto(url) {
-    console.log('goto', url);
+    console.log(reqId, 'client.goto', url);
     n = n.goto(url)
         .inject('js', 'node_modules/jquery/dist/jquery.min.js')
         .inject('js', 'jqextract.js');
@@ -49,7 +43,7 @@ function Driver(nightmare) {
   }
 
   function extract(fn) {
-    console.log('extract');
+    console.log(reqId, 'client.extract');
     n = n.evaluate(fn);
     return _;
   }

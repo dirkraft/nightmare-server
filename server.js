@@ -1,58 +1,85 @@
 #!/usr/bin/env js
 
 var express = require('express'),
+    app = express(),
     bodyParser = require('body-parser'),
     fs = require('fs'),
     sprintf = require('sprintf'),
     _ = require('lodash'),
     Nightmare = require('nightmare'),
-    Driver = require('./scriptDriver').Driver;
+    nightmare = new Nightmare({show: false}),
+    Driver = require('./driver').Driver;
 
-var app = express();
 app.use(bodyParser.text({type: "*/*"}));
-var nightmare = Nightmare({show: false}),
-    driver = new Driver(nightmare);
 
-// This is our poor request limiter. One electron, means 1 request at a time.
-var requestCount = 0;
+var queue = [];
+// This must be limited to 1 (or boolean) as long as this process is limited to 1 nightmare/electron.
+var dispatching = false;
+var requestId = 0;
 
 app.post('/', function (req, res) {
+  queue.push({req: req, res: res});
+  dispatchNext();
+});
 
-  if (requestCount >= 1) {
-    errorResponse(503, 'My electron is busy. Responding with 503');
-    return;
-  }
+app.listen(3000, function () {
+  console.log('server.js listening on port 3000!');
+});
 
-  console.log('Dispatching driver script to electron.');
-  ++requestCount;
+function dispatchNext() {
 
   try {
+    if (dispatching) {
+      console.log('I am too busy. Enqueued request. Queue:', queue.length, 'Dispatching:', dispatching);
+      return;
+    }
+    if (!queue.length) {
+      console.log('No more requests queued up. Queue:', queue.length, 'Dispatching:', dispatching);
+      return;
+    }
 
-    if (req.params.template) {
-      // TODO load all of these on startup
-      fs.readFile('templates/' + req.params.template + '.js', 'utf8', function (err, template) {
+    var requestTuple = queue.shift(),
+        req = requestTuple.req,
+        res = requestTuple.res,
+        reqId = ++requestId;
+    dispatching = true;
+    console.log(reqId, 'Dispatching request. Queue:', queue.length, 'Dispatching:', dispatching);
+
+    if (req.query.template) {
+      fs.readFile('templates/' + req.query.template + '.js', 'utf8', function (err, template) {
         if (err) {
-          errorResponse(400, err);
+          return errorResponse(400, err);
         }
-        var fnStr = sprintf(template, req.params);
-        driveRequest(fnStr);
+        try {
+          var fnStr = sprintf(template, req.query);
+          return driveRequest(fnStr);
+
+        } catch (e) {
+          return errorResponse(400, e);
+        }
       });
     } else {
-      driveRequest(req.body.trim());
+      return driveRequest(req.body);
     }
 
   } catch (e) {
-    --requestCount;
-    errorResponse(500, e);
+    return errorResponse(500, e);
   }
 
   function driveRequest(fnStr) {
-    var script = eval(fnStr);
-    driver.reset()
-        .runScript(script)
-        .finish(res, function () {
-          console.log('Releasing electron', requestCount);
-          --requestCount;
+    var driverScript = eval(fnStr);
+    if (!_.isFunction(driverScript)) {
+      return errorResponse(400, 'Request body is not a function. Should follow the form (function(driver){ /* ... */ })')
+    }
+    new Driver(reqId, nightmare)
+        .reset()
+        .runDriverScript(driverScript)
+        .finish(function (status, result) {
+          res.status(status).send(result);
+          res.end();
+          dispatching = false;
+          console.log(reqId, 'Finished positive response. Queue:', queue.length, 'Dispatching:', dispatching);
+          dispatchNext();
         });
   }
 
@@ -60,9 +87,9 @@ app.post('/', function (req, res) {
     console.error(error);
     res.status(status).send(error.toString());
     res.end();
+    dispatching = false;
+    console.log(reqId, 'Finished error response. Queue:', queue.length, 'Dispatching:', dispatching);
+    dispatchNext();
   }
-});
 
-app.listen(3000, function () {
-  console.log('server.js listening on port 3000!');
-});
+}
