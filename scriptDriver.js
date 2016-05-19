@@ -43,7 +43,8 @@ function Driver(nightmare) {
   function goto(url) {
     console.log('goto', url);
     n = n.goto(url)
-        .inject('js', 'node_modules/jquery/dist/jquery.min.js');
+        .inject('js', 'node_modules/jquery/dist/jquery.min.js')
+        .inject('js', 'jqextract.js');
     return _;
   }
 

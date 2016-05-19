@@ -1,5 +1,10 @@
+#!/usr/bin/env js
+
 var express = require('express'),
     bodyParser = require('body-parser'),
+    fs = require('fs'),
+    sprintf = require('sprintf'),
+    _ = require('lodash'),
     Nightmare = require('nightmare'),
     Driver = require('./scriptDriver').Driver;
 
@@ -13,32 +18,49 @@ var requestCount = 0;
 
 app.post('/', function (req, res) {
 
-  console.log('Add 1 to count', requestCount);
   if (requestCount >= 1) {
-    console.warn('My electron is busy. Responding with 503');
-    res.sendStatus(503);
-    res.end();
+    errorResponse(503, 'My electron is busy. Responding with 503');
     return;
   }
+
   console.log('Dispatching driver script to electron.');
   ++requestCount;
 
   try {
-    var fnStr = req.body.trim();
-    var userScript = eval(fnStr);
-    driver.reset()
-        .runScript(userScript)
-        .finish(res, function () {
-          console.log('Remove 1 from count', requestCount);
-          --requestCount;
-        });
+
+    if (req.params.template) {
+      // TODO load all of these on startup
+      fs.readFile('templates/' + req.params.template + '.js', 'utf8', function (err, template) {
+        if (err) {
+          errorResponse(400, err);
+        }
+        var fnStr = sprintf(template, req.params);
+        driveRequest(fnStr);
+      });
+    } else {
+      driveRequest(req.body.trim());
+    }
+
   } catch (e) {
     --requestCount;
-    console.error(e);
-    res.sendStatus(400);
-    res.end();
+    errorResponse(500, e);
   }
 
+  function driveRequest(fnStr) {
+    var script = eval(fnStr);
+    driver.reset()
+        .runScript(script)
+        .finish(res, function () {
+          console.log('Releasing electron', requestCount);
+          --requestCount;
+        });
+  }
+
+  function errorResponse(status, error) {
+    console.error(error);
+    res.status(status).send(error.toString());
+    res.end();
+  }
 });
 
 app.listen(3000, function () {

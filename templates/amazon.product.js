@@ -1,12 +1,12 @@
 (function (driver) {
 
   driver
-      .goto('%s')
+      .goto('%(url)s')
       .extract(function () {
         return {
-          name: $('#btAsinTitle,h1#title').first().text().trim(),
-          price: $('#priceblock_ourprice').first().text().trim(),
-          url: $('link[rel=canonical]').attr('href').trim()
+          name: $('#btAsinTitle,h1#title').nmtext(),
+          price: $('#priceblock_ourprice').nmtext(),
+          url: $('link[rel=canonical]').nmattr('href')
         }
       });
 
