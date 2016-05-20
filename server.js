@@ -1,4 +1,4 @@
-#!/usr/bin/env js
+#!/usr/bin/env node
 
 var express = require('express'),
     app = express(),
@@ -17,14 +17,19 @@ var queue = [];
 var dispatching = false;
 var requestId = 0;
 
-app.post('/', function (req, res) {
-  queue.push({req: req, res: res});
-  dispatchNext();
-});
+app.get('/', handleExpressReq);
+
+app.post('/', handleExpressReq);
 
 app.listen(3000, function () {
   console.log('server.js listening on port 3000!');
 });
+
+
+function handleExpressReq(req, res) {
+  queue.push({req: req, res: res});
+  dispatchNext();
+}
 
 function dispatchNext() {
 
@@ -33,6 +38,7 @@ function dispatchNext() {
       console.log('I am too busy. Enqueued request. Queue:', queue.length, 'Dispatching:', dispatching);
       return;
     }
+    
     if (!queue.length) {
       console.log('No more requests queued up. Queue:', queue.length, 'Dispatching:', dispatching);
       return;
@@ -42,21 +48,30 @@ function dispatchNext() {
         req = requestTuple.req,
         res = requestTuple.res,
         reqId = ++requestId;
+
     dispatching = true;
     console.log(reqId, 'Dispatching request. Queue:', queue.length, 'Dispatching:', dispatching);
 
     if (req.query.template) {
       fs.readFile('templates/' + req.query.template + '.js', 'utf8', function (err, template) {
         if (err) {
+          // Presumably template not found.
           return errorResponse(400, err);
         }
         try {
           var fnStr = sprintf(template, req.query);
-          return driveRequest(fnStr);
 
         } catch (e) {
-          return errorResponse(400, e);
+          console.log(e);
+          if (_.indexOf(e, 'does not exist')) {
+            // Presumably missing formatter args.
+            return errorResponse(400, e);
+          } else {
+            return errorResponse(500, e);
+          }
         }
+
+        return driveRequest(fnStr);
       });
     } else {
       return driveRequest(req.body);
