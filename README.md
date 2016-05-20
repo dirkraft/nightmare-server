@@ -1,8 +1,7 @@
 nightmare-server
 ================
 
-A light express.js server that exposes nightmare.js over HTTP
-oriented around extracting structured data from web pages.
+Exposes [nightmare.js](https://github.com/segmentio/nightmare) over HTTP.
 
 
 
@@ -61,6 +60,8 @@ outputs
 
 
 #### Driver Scripts ####
+
+TODO document.
 
 
 
