@@ -16,6 +16,7 @@ Quit the container with ctrl-C.
 
 Some docker commands to get relevant connection points.
 
+    eval $(docker-machine env)
     docker_addr=$(docker-machine ip)
     container_id=$(docker ps -f ancestor=dirkraft/nightmare-server -q)
     docker_port=$(docker port ${container_id} 3000 | cut -d ':' -f 2)

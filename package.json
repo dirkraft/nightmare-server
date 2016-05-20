@@ -2,6 +2,10 @@
   "name": "nightmare-server",
   "version": "1.0.0",
   "description": "",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dirkraft/nightmare-server"
+  },
   "main": "server.js",
   "dependencies": {
     "body-parser": "^1.15.1",
