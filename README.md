@@ -23,7 +23,7 @@ Some docker commands to get relevant connection points.
 
 With curl
 
-    curl -XPOST ${docker_addr}:${docker_port}  # params...
+    curl ${nmserver}...
 
 
 ### Usage ###
