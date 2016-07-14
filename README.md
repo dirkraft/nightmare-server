@@ -15,13 +15,20 @@ metrics per docker container correspond 1-1 with nightmare performance.
 
 ### Docker Usage ###
 
+If you aren't familiar with docker (I wasn't when I did this),
+it takes time and experimentation to get used to. Basically it involves
+setting up: VirtualBox, then docker-machine, then issuing docker
+commands to your docker-machine daemon thing (which is running in
+VirtualBox). https://docs.docker.com/machine/get-started/
+
 Retrieve and run the latest image from dockerhub. This will
 start it in the current shell so you can watch any output.
 Quit the container with ctrl-C.
 
     docker run -t -P -i dirkraft/nightmare-server
 
-Some docker commands to get relevant connection points.
+In a new terminal tab, get relevant connection points and put them
+in some vars.
 
     eval $(docker-machine env)
     docker_addr=$(docker-machine ip)
@@ -29,9 +36,10 @@ Some docker commands to get relevant connection points.
     docker_port=$(docker port ${container_id} 3000 | cut -d ':' -f 2)
     nmserver=${docker_addr}:${docker_port}
 
-With curl
+So our nightmare-server is running in a docker container exposed to our
+host machine, and we can reach it from the host as captured by
 
-    curl ${nmserver}...
+    echo ${nmserver}
 
 
 ### Usage ###
