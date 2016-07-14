@@ -33,6 +33,7 @@ function Driver(reqId, n) {
   // For clients
   _.goto = goto;
   _.extract = extract;
+  _.nightmare = nightmare;
 
   function goto(url) {
     console.log(reqId, 'client.goto', url);
@@ -46,6 +47,11 @@ function Driver(reqId, n) {
     console.log(reqId, 'client.extract');
     n = n.evaluate(fn);
     return _;
+  }
+
+  function nightmare() {
+    console.log(reqId, "client.nightmare() directly! (we won't have visibility)");
+    return n;
   }
 
 }
