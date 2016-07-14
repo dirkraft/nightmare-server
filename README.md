@@ -21,6 +21,11 @@ setting up: VirtualBox, then docker-machine, then issuing docker
 commands to your docker-machine daemon thing (which is running in
 VirtualBox). https://docs.docker.com/machine/get-started/
 
+Pretty much have to do this in all your shells everytime you start your
+docker-machine or open a new shell.
+
+    eval $(docker-machine env)
+
 Retrieve and run the latest image from dockerhub. This will
 start it in the current shell so you can watch any output.
 Quit the container with ctrl-C.

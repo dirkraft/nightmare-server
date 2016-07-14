@@ -6,8 +6,8 @@ RUN DEBIAN_FRONTEND=noninteractive /usr/bin/apt-get install -y libgtk2.0-0 libno
 RUN /usr/bin/curl -sL https://deb.nodesource.com/setup_6.x | /bin/bash && \
         DEBIAN_FRONTEND=noninteractive /usr/bin/apt-get install -y nodejs
 
-COPY . /opt/nightmare-server
 WORKDIR /opt/nightmare-server
+COPY . .
 RUN /usr/bin/npm install
 
 CMD /usr/bin/xvfb-run ./server.js
