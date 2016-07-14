@@ -8,12 +8,12 @@
   },
   "main": "server.js",
   "dependencies": {
-    "body-parser": "^1.15.1",
-    "express": "^4.13.4",
-    "jquery": "^2.2.3",
-    "lodash": "^4.12.0",
-    "nightmare": "^2.4.0",
-    "sprintf": "^0.1.5"
+    "body-parser": "1.15.1",
+    "express": "4.13.4",
+    "jquery": "2.2.3",
+    "lodash": "4.12.0",
+    "nightmare": "2.4.0",
+    "sprintf": "0.1.5"
   },
   "devDependencies": {},
   "scripts": {
